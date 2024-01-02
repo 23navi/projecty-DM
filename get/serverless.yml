@@ -1,0 +1,35 @@
+service: get-xlsx
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-south-1
+  memorySize: 256
+  stage: ${opt:stage, 'dev'}
+
+functions:
+  hello:
+    handler: src/handlers/getUrls.handler
+    events:
+      - http:
+          method: GET
+          path: /getUrls/{IMEI}
+          cors:
+            origin: "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amzn-Trace-Id
+            allowCredentials: true
+
+plugins:
+  - serverless-bundle
+
+custom:
+  bundle:
+    linting: false
