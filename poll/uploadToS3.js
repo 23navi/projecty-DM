@@ -3,15 +3,20 @@ if (process.env.NODE_ENV !== "production") {
 }
 import { MongoClient } from "mongodb";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import XLSX from "xlsx"; // Import XLSX library.
+import XLSX from "xlsx";
+
+const mongoUri = process.env.MONGO_URI;
+const collectionName = process.env.COLLECTION_NAME;
+
+// Initialize MongoDB client outsite the handler function
+//  will be shared among all the lambda functions created within 15 min of the first function
+//  (Lambda executation context)
+const client = await MongoClient.connect(mongoUri);
+const db = client.db();
+const collection = db.collection(collectionName);
 
 async function exportFromMongoDB({ query }) {
-  const mongoUri = process.env.MONGO_URI;
-  const collectionName = process.env.COLLECTION_NAME;
   try {
-    const client = await MongoClient.connect(mongoUri);
-    const db = client.db();
-    const collection = db.collection(collectionName);
     const cursor = collection.find(query);
     const data = await cursor.toArray();
 
@@ -27,34 +32,16 @@ async function exportFromMongoDB({ query }) {
     XLSX.utils.book_append_sheet(wb, ws, "Sheet 1");
     const xlsxBuffer = XLSX.write(wb, { bookType: "xlsx", type: "buffer" });
 
-    client.close();
+    // If we close the client connection ? How will other lambda function in the context will connect?
+    // client.close();
 
-    console.log("Data exported from MongoDB.");
-    // return jsonData;
-    return xlsxBuffer; // Return the XLSX buffer instead of JSON data.
+    // console.log("Data exported from MongoDB.");
+
+    return xlsxBuffer;
   } catch (error) {
     console.error("Error exporting data from MongoDB:", error);
   }
 }
-
-// async function uploadToS3({ s3Key, jsonBuffer }) {
-//   const s3Bucket = "projecty-test-data";
-//   try {
-//     const s3 = new S3Client();
-
-//     const params = {
-//       Bucket: s3Bucket,
-//       Key: s3Key,
-//       Body: jsonBuffer,
-//     };
-
-//     await s3.send(new PutObjectCommand(params));
-
-//     console.log("Data uploaded successfully to S3.");
-//   } catch (error) {
-//     console.error("Error uploading data to S3:", error);
-//   }
-// }
 
 // Upload xlsx
 async function uploadToS3({ s3Key, xlsxBuffer }) {
@@ -75,26 +62,6 @@ async function uploadToS3({ s3Key, xlsxBuffer }) {
     console.error("Error uploading data to S3:", error);
   }
 }
-//JSON
-// const entryPoint = async ({ IMEI, startTime, endTime }) => {
-//   const outputFile = `${startTime.toISOString()}.json`;
-//   const s3Key = `IMEI-${IMEI}/${outputFile}`;
-
-//   const query = {
-//     Timestamp: {
-//       $gte: startTime,
-//       $lte: endTime,
-//     },
-//     IMEI: {
-//       $eq: IMEI,
-//     },
-//   };
-//   const jsonBuffer = await exportFromMongoDB({ query });
-//   if (!jsonBuffer) {
-//     return; // Exit the function if no data is found.
-//   }
-//   await uploadToS3({ s3Key, jsonBuffer });
-// };
 
 // XLSX
 const entryPoint = async ({ IMEI, startTime, endTime }) => {
