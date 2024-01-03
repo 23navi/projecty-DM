@@ -19,8 +19,8 @@ export const handler = async (event) => {
         startTime: new Date(body.startTime),
         endTime: new Date(body.endTime),
       });
-    } catch (err) {
-      console.log(err.message);
+    } catch (error) {
+      console.log(error.message);
     }
     // Delete the message from the queue (When lambda is used with SQS, we don't need to delete the message, it's handled automatically)
     //https://docs.aws.amazon.com/en_gb/lambda/latest/dg/with-sqs.html

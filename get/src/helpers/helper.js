@@ -27,11 +27,11 @@ export const keyExists = async ({ Bucket = "projecty-test-data", Key }) => {
   try {
     await s3Client.send(new HeadObjectCommand(presignParams));
     return true;
-  } catch (err) {
-    if (err.name === "NotFound") {
+  } catch (error) {
+    if (error.name === "NotFound") {
       console.log(`Key '${presignParams.Key}' does not exist in the bucket.`);
     } else {
-      console.error(`Error: ${err}`);
+      console.error(`Error: ${error}`);
     }
     return false;
   }
