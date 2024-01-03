@@ -35,8 +35,6 @@ async function exportFromMongoDB({ query }) {
     // If we close the client connection ? How will other lambda function in the context will connect?
     // client.close();
 
-    // console.log("Data exported from MongoDB.");
-
     return xlsxBuffer;
   } catch (error) {
     console.error("Error exporting data from MongoDB:", error);
